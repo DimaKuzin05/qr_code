@@ -60,8 +60,8 @@ qr_bot/
 ### **2. Создать виртуальное окружение**
 
 `python -m venv .venv
-`source .venv/bin/activate   # macOS / Linux
-`.venv\Scripts\activate      # Windows`
+source .venv/bin/activate   # macOS / Linux
+`.venv\Scripts\activate      # Windows
 
 ### **3. Установить зависимости**
 
