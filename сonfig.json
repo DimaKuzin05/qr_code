@@ -1,0 +1,6 @@
+{
+  "bot_name": "qr_code_bot",
+  "polling_interval": 1,
+  "timezone": "UTC+3",
+  "qr_size": 300
+}
