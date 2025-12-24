@@ -1,0 +1,25 @@
+# виртуальное окружение
+.venv/
+venv/
+env/
+
+# python
+__pycache__/
+*.pyc
+
+# временные файлы
+temp/
+*.log
+
+# локальные данные
+data/*.txt
+data/*.csv
+
+# конфиги с токенами
+config.json
+config.yaml
+
+# системные
+.DS_Store
+.idea/
+.vscode/

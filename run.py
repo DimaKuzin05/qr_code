@@ -3,15 +3,18 @@ import time
 
 from dotenv import load_dotenv
 
-from utils.handlers import handle_message
+from utils.config import BOT_DELAY
+from utils.handlers import process_message
+from utils.scheduler import start_scheduler
 from utils.telegram_api import get_updates
 
 load_dotenv()
 
-ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x]
 TOKEN = os.getenv("BOT_TOKEN")
 
 offset = None
+
+start_scheduler(TOKEN)
 
 try:
     while True:
@@ -19,10 +22,9 @@ try:
 
         for update in updates.get("result", []):
             offset = update["update_id"] + 1
-            if "message" in update:
-                handle_message(TOKEN, update["message"])
+            process_message(TOKEN, update["message"])
 
-        time.sleep(1)
+        time.sleep(BOT_DELAY)
 
 except KeyboardInterrupt:
-    print("\nБот остановлен корректно 👍")
+    print("Бот остановлен")

@@ -1,0 +1,5 @@
+requests
+python-dotenv
+qrcode[pil]
+schedule
+PyYAML

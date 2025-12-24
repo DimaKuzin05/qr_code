@@ -1,45 +1,91 @@
-# обработка сообщения
+import json
+
+from utils.telegram_api import send_message, send_photo, send_photo_url
 from utils.qr import generate_qr
-from utils.telegram_api import send_message, send_photo
 from utils.users import save_user
+from utils.config import ADMINS, MESSAGES
+from utils.catass import get_random_cat
+from utils.location import get_address
 
 
-def handle_message(token, message):
+def main_keyboard():
+    return json.dumps({
+        "keyboard": [
+            ["QR", "!Кота"],
+            ["/me", "/admin"]
+        ],
+        "resize_keyboard": True
+    })
+
+
+def process_message(token, message):
     chat_id = message["chat"]["id"]
-    username = message["chat"].get("username", "unknown")
-    text = message.get("text", "")
+    save_user(message)
 
-    save_user(chat_id, username)
+    # Геолокация (OpenWeather)
+    if "location" in message:
+        lat = message["location"]["latitude"]
+        lon = message["location"]["longitude"]
 
-    # /start
+        address = get_address(lat, lon)
+
+        send_message(
+            token,
+            chat_id,
+            "Ваше местоположение:\n" + address
+        )
+        return
+
+    # Фото от пользователя
+    if "photo" in message:
+        send_message(token, chat_id, "Я получил изображение 📷")
+        return
+
+    if "text" not in message:
+        return
+
+    text = message["text"].strip()
+
+    # start
     if text == "/start":
         send_message(
             token,
             chat_id,
-            "👋 *Привет!* Я бот для создания QR-кодов.\n\n"
-            "Отправь мне ссылку — я превращу её в QR ",
+            MESSAGES["start"],
+            reply_markup=main_keyboard()
         )
+        return
+
+    # кнопка QR
+    if text == "QR":
+        send_message(token, chat_id, "Отправь ссылку, и я сделаю QR-код")
+        return
+
+    # кнопка кота
+    if text == "!Кота":
+        cat_url = get_random_cat()
+        send_photo_url(token, chat_id, cat_url)
+        send_message(token, chat_id, "Держи кота 🐱")
+        return
 
     # /me
-    elif text == "/me":
-        send_message(
-            token,
-            chat_id,
-            f"❤️ *Твой профиль:*\nID: `{chat_id}`\nUsername: `{username}`",
-        )
+    if text == "/me":
+        send_message(token, chat_id, f"Ваш chat_id: {chat_id}")
+        return
+
+    # /admin
+    if text == "/admin":
+        if chat_id in ADMINS:
+            send_message(token, chat_id, "Вы администратор")
+        else:
+            send_message(token, chat_id, "Нет доступа")
+        return
 
     # ссылка → QR
-    elif text.startswith("http"):
-        qr_path = generate_qr(text, chat_id)
+    if "http://" in text or "https://" in text:
+        qr_path = generate_qr(text)
         send_photo(token, chat_id, qr_path)
+        send_message(token, chat_id, "QR-код готов ✅")
+        return
 
-    # location
-    elif "location" in message:
-        lat = message["location"]["latitude"]
-        lon = message["location"]["longitude"]
-        send_message(
-            token, chat_id, f"📍 *Ваша локация:*\nШирота: `{lat}`\nДолгота: `{lon}`"
-        )
-
-    else:
-        send_message(token, chat_id, "❗ Я понимаю только ссылки и команды 🙂")
+    send_message(token, chat_id, MESSAGES["unknown"])

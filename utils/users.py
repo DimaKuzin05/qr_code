@@ -1,23 +1,26 @@
-# работа с csv
-
 import csv
 import os
+from datetime import datetime
 
-FILE_PATH = "data/users.csv"
+FILE = "data/users.csv"
 
 
-def save_user(chat_id, username):
+def save_user(message):
     os.makedirs("data", exist_ok=True)
 
-    if not os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["chat_id", "username"])
+    chat = message["chat"]
+    chat_id = chat["id"]
+    name = chat.get("first_name", "")
 
-    with open(FILE_PATH, "r", newline="") as f:
-        users = [row[0] for row in csv.reader(f)]
-
-    if str(chat_id) not in users:
-        with open(FILE_PATH, "a", newline="") as f:
+    if not os.path.exists(FILE):
+        with open(FILE, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow([chat_id, username])
+            writer.writerow(["chat_id", "name", "date"])
+
+    with open(FILE, "r", encoding="utf-8") as f:
+        if str(chat_id) in f.read():
+            return
+
+    with open(FILE, "a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([chat_id, name, datetime.now().date()])
